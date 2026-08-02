@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: cardsync-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cardsync}
+      POSTGRES_USER: ${POSTGRES_USER:-cardsync}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cardsync}
+    ports:
+      - "5433:5432"
+    volumes:
+      - cardsync-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  cardsync-postgres-data:
