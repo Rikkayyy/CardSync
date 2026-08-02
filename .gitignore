@@ -21,6 +21,7 @@ build/
 # Local notes
 todo.md
 securityaudit.md
+ARCHITECTURE_DECISIONS.md
 
 # OS / editor
 .DS_Store
