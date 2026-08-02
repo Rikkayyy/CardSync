@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { PlaidLinkButton } from "@/components/PlaidLinkButton";
+import { TransactionList } from "@/components/TransactionList";
 
 export default function DashboardPage() {
   const { token, email, logout } = useAuth();
@@ -35,6 +36,7 @@ export default function DashboardPage() {
       </div>
 
       <PlaidLinkButton />
+      <TransactionList />
     </div>
   );
 }

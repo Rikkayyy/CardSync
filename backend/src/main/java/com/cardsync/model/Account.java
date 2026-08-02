@@ -17,28 +17,37 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "plaid_items")
+@Table(name = "accounts")
 @Getter
 @Setter
 @NoArgsConstructor
-public class PlaidItem {
+public class Account {
 
     @Id
     @GeneratedValue
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "plaid_item_id", nullable = false)
+    private PlaidItem plaidItem;
 
-    @Column(name = "plaid_item_id", nullable = false, unique = true)
-    private String plaidItemId;
+    @Column(name = "plaid_account_id", nullable = false, unique = true)
+    private String plaidAccountId;
 
-    @Column(name = "access_token_encrypted", nullable = false)
-    private String accessTokenEncrypted;
+    @Column(nullable = false)
+    private String name;
 
-    @Column(name = "transactions_cursor")
-    private String transactionsCursor;
+    private String mask;
+
+    private String type;
+
+    private String subtype;
+
+    @Column(name = "current_balance")
+    private Double currentBalance;
+
+    @Column(name = "iso_currency_code")
+    private String isoCurrencyCode;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

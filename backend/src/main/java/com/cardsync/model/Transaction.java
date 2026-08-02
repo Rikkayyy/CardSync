@@ -14,31 +14,46 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
-@Table(name = "plaid_items")
+@Table(name = "transactions")
 @Getter
 @Setter
 @NoArgsConstructor
-public class PlaidItem {
+public class Transaction {
 
     @Id
     @GeneratedValue
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
-    @Column(name = "plaid_item_id", nullable = false, unique = true)
-    private String plaidItemId;
+    @Column(name = "plaid_transaction_id", nullable = false, unique = true)
+    private String plaidTransactionId;
 
-    @Column(name = "access_token_encrypted", nullable = false)
-    private String accessTokenEncrypted;
+    @Column(nullable = false)
+    private Double amount;
 
-    @Column(name = "transactions_cursor")
-    private String transactionsCursor;
+    @Column(name = "iso_currency_code")
+    private String isoCurrencyCode;
+
+    @Column(nullable = false)
+    private LocalDate date;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(name = "merchant_name")
+    private String merchantName;
+
+    private String category;
+
+    @Column(nullable = false)
+    private Boolean pending;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
