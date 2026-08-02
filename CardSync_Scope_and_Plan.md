@@ -21,7 +21,7 @@ Portfolio piece aimed at fintech/banking software roles. The goal is to demonstr
 - **Database:** Postgres, accessed via Spring Data JPA + Hibernate
 - **Bank data:** Plaid API (Sandbox → Development tier), via Plaid's Java SDK
 - **Hosting:** Frontend on Vercel; backend on AWS (ECS or Elastic Beanstalk)
-- **Auth:** TBD — Spring Security (JWT) is the likely default for the app's own auth, separate from Plaid's bank-auth flow
+- **Auth:** Custom Spring Security + JWT (self-implemented — password hashing, token issuance/refresh, secured endpoints), separate from Plaid's bank-auth flow
 
 ---
 
