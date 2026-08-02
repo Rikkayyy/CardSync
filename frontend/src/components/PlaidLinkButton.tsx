@@ -9,6 +9,8 @@ export function PlaidLinkButton() {
   const { token } = useAuth();
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isExchanging, setIsExchanging] = useState(false);
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -21,28 +23,45 @@ export function PlaidLinkButton() {
       .catch(() => setError("Couldn't start the bank connection. Try again."));
   }, [token]);
 
-  const onSuccess: PlaidLinkOnSuccess = useCallback((publicToken) => {
-    // TODO: send publicToken to POST /api/plaid/exchange-token once that endpoint exists.
-    console.log("Plaid Link public_token:", publicToken);
-  }, []);
+  const onSuccess: PlaidLinkOnSuccess = useCallback(
+    (publicToken) => {
+      setIsExchanging(true);
+      setError(null);
+      apiFetch(
+        "/api/plaid/exchange-token",
+        {
+          method: "POST",
+          body: JSON.stringify({ publicToken }),
+        },
+        token
+      )
+        .then(() => setConnected(true))
+        .catch(() => setError("Couldn't finish connecting your bank. Try again."))
+        .finally(() => setIsExchanging(false));
+    },
+    [token]
+  );
 
   const { open, ready } = usePlaidLink({
     token: linkToken,
     onSuccess,
   });
 
-  if (error) {
-    return <p className="text-sm text-red-600">{error}</p>;
+  if (connected) {
+    return <p className="text-sm text-zinc-600 dark:text-zinc-400">Bank account connected.</p>;
   }
 
   return (
-    <button
-      type="button"
-      onClick={() => open()}
-      disabled={!ready}
-      className="rounded-full bg-foreground px-5 py-2 text-background transition-colors hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
-    >
-      Connect a bank account
-    </button>
+    <div className="flex flex-col items-center gap-2">
+      <button
+        type="button"
+        onClick={() => open()}
+        disabled={!ready || isExchanging}
+        className="rounded-full bg-foreground px-5 py-2 text-background transition-colors hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+      >
+        {isExchanging ? "Connecting..." : "Connect a bank account"}
+      </button>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </div>
   );
 }
