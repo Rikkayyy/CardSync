@@ -1,4 +1,4 @@
-package com.cardsync;
+package com.cardsync.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
