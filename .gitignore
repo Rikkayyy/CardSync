@@ -18,6 +18,9 @@ build/
 .env.local
 .env.*.local
 
+# Local notes
+todo.md
+
 # OS / editor
 .DS_Store
 .idea/
