@@ -1,5 +1,7 @@
 package com.cardsync.service;
 
+import com.cardsync.dto.CategoryTotal;
+import com.cardsync.dto.SpendSummaryResponse;
 import com.cardsync.dto.TransactionResponse;
 import com.cardsync.model.Account;
 import com.cardsync.model.PlaidItem;
@@ -22,10 +24,18 @@ import org.springframework.web.server.ResponseStatusException;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 public class TransactionService {
+
+    /** Plaid personal_finance_category primaries that represent moving money, not spending it. */
+    private static final Set<String> NON_SPEND_CATEGORIES = Set.of("LOAN_PAYMENTS", "TRANSFER_IN", "TRANSFER_OUT");
 
     private final PlaidApi plaidApi;
     private final UserRepository userRepository;
@@ -163,5 +173,56 @@ public class TransactionService {
                         t.getCategoryDetailed(),
                         Boolean.TRUE.equals(t.getPending())))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public SpendSummaryResponse getSpendSummary(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+
+        LocalDate today = LocalDate.now();
+        LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
+        LocalDate startOfMonth = today.withDayOfMonth(1);
+        LocalDate earliest = startOfWeek.isBefore(startOfMonth) ? startOfWeek : startOfMonth;
+
+        List<Transaction> transactions = transactionRepository.findAllByUserSince(user, earliest);
+
+        double totalToday = 0;
+        double totalThisWeek = 0;
+        double totalThisMonth = 0;
+        String isoCurrencyCode = null;
+        Map<String, Double> byCategory = new LinkedHashMap<>();
+
+        for (Transaction t : transactions) {
+            if (!isSpend(t)) continue;
+            if (isoCurrencyCode == null) {
+                isoCurrencyCode = t.getIsoCurrencyCode();
+            }
+
+            double amount = t.getAmount();
+            if (!t.getDate().isBefore(startOfMonth)) {
+                totalThisMonth += amount;
+                String category = t.getCategoryPrimary() != null ? t.getCategoryPrimary() : "OTHER";
+                byCategory.merge(category, amount, Double::sum);
+            }
+            if (!t.getDate().isBefore(startOfWeek)) {
+                totalThisWeek += amount;
+            }
+            if (!t.getDate().isBefore(today)) {
+                totalToday += amount;
+            }
+        }
+
+        List<CategoryTotal> categoryTotals = byCategory.entrySet().stream()
+                .map(e -> new CategoryTotal(e.getKey(), e.getValue()))
+                .sorted((a, b) -> Double.compare(b.total(), a.total()))
+                .toList();
+
+        return new SpendSummaryResponse(totalToday, totalThisWeek, totalThisMonth, isoCurrencyCode, categoryTotals);
+    }
+
+    private boolean isSpend(Transaction t) {
+        if (t.getAmount() == null || t.getAmount() <= 0) return false;
+        return t.getCategoryPrimary() == null || !NON_SPEND_CATEGORIES.contains(t.getCategoryPrimary());
     }
 }

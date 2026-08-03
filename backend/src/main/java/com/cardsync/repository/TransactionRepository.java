@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,4 +23,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             order by t.date desc, t.createdAt desc
             """)
     List<Transaction> findAllByUserOrderByDateDesc(@Param("user") User user);
+
+    @Query("""
+            select t from Transaction t
+            where t.account.plaidItem.user = :user
+            and t.date >= :since
+            """)
+    List<Transaction> findAllByUserSince(@Param("user") User user, @Param("since") LocalDate since);
 }

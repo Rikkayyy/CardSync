@@ -1,5 +1,6 @@
 package com.cardsync.controller;
 
+import com.cardsync.dto.SpendSummaryResponse;
 import com.cardsync.dto.TransactionResponse;
 import com.cardsync.service.TransactionService;
 import org.springframework.http.ResponseEntity;
@@ -30,5 +31,10 @@ public class TransactionController {
     @GetMapping
     public ResponseEntity<List<TransactionResponse>> list(Authentication authentication) {
         return ResponseEntity.ok(transactionService.listTransactions(authentication.getName()));
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<SpendSummaryResponse> summary(Authentication authentication) {
+        return ResponseEntity.ok(transactionService.getSpendSummary(authentication.getName()));
     }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 
@@ -25,20 +25,15 @@ function formatCategory(value: string | null): string {
     .join(" ");
 }
 
-export function TransactionList() {
+export function TransactionList({ refreshKey }: { refreshKey: number }) {
   const { token } = useAuth();
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTransactions = useCallback(() => {
-    if (!token) return Promise.resolve<TransactionResponse[]>([]);
-    return apiFetch<TransactionResponse[]>("/api/transactions", {}, token);
-  }, [token]);
-
   useEffect(() => {
+    if (!token) return;
     let cancelled = false;
-    fetchTransactions()
+    apiFetch<TransactionResponse[]>("/api/transactions", {}, token)
       .then((data) => {
         if (!cancelled) setTransactions(data);
       })
@@ -48,36 +43,13 @@ export function TransactionList() {
     return () => {
       cancelled = true;
     };
-  }, [fetchTransactions]);
-
-  async function handleSync() {
-    setIsSyncing(true);
-    setError(null);
-    try {
-      await apiFetch("/api/transactions/sync", { method: "POST" }, token);
-      setTransactions(await fetchTransactions());
-    } catch {
-      setError("Couldn't sync transactions. Try again.");
-    } finally {
-      setIsSyncing(false);
-    }
-  }
+  }, [token, refreshKey]);
 
   return (
     <div className="flex w-full max-w-3xl flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-black dark:text-zinc-50">
-          Transactions
-        </h2>
-        <button
-          type="button"
-          onClick={handleSync}
-          disabled={isSyncing}
-          className="rounded-full border border-black/[.08] px-4 py-1.5 text-sm font-medium transition-colors hover:bg-black/[.04] disabled:opacity-50 dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
-        >
-          {isSyncing ? "Syncing..." : "Sync"}
-        </button>
-      </div>
+      <h2 className="text-lg font-semibold text-black dark:text-zinc-50">
+        Transactions
+      </h2>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
