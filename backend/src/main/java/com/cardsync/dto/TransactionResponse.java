@@ -9,6 +9,7 @@ public record TransactionResponse(
         String merchantName,
         Double amount,
         String isoCurrencyCode,
-        String category,
+        String categoryPrimary,
+        String categoryDetailed,
         boolean pending) {
 }

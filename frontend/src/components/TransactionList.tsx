@@ -11,9 +11,19 @@ type TransactionResponse = {
   merchantName: string | null;
   amount: number;
   isoCurrencyCode: string | null;
-  category: string | null;
+  categoryPrimary: string | null;
+  categoryDetailed: string | null;
   pending: boolean;
 };
+
+function formatCategory(value: string | null): string {
+  if (!value) return "—";
+  return value
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
 export function TransactionList() {
   const { token } = useAuth();
@@ -107,7 +117,7 @@ export function TransactionList() {
                   {t.accountName}
                 </td>
                 <td className="py-2 text-zinc-600 dark:text-zinc-400">
-                  {t.category ?? "—"}
+                  {formatCategory(t.categoryDetailed ?? t.categoryPrimary)}
                 </td>
                 <td className="py-2 text-right text-black dark:text-zinc-50">
                   {t.amount.toFixed(2)} {t.isoCurrencyCode ?? ""}

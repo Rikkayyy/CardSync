@@ -50,7 +50,14 @@ public class Transaction {
     @Column(name = "merchant_name")
     private String merchantName;
 
+    /** Legacy Plaid taxonomy (e.g. "Travel > Taxi") -- kept as a fallback/debug field. */
     private String category;
+
+    @Column(name = "category_primary")
+    private String categoryPrimary;
+
+    @Column(name = "category_detailed")
+    private String categoryDetailed;
 
     @Column(nullable = false)
     private Boolean pending;

@@ -131,6 +131,10 @@ public class TransactionService {
             transaction.setMerchantName(plaidTransaction.getMerchantName());
             transaction.setCategory(
                     plaidTransaction.getCategory() != null ? String.join(" > ", plaidTransaction.getCategory()) : null);
+            if (plaidTransaction.getPersonalFinanceCategory() != null) {
+                transaction.setCategoryPrimary(plaidTransaction.getPersonalFinanceCategory().getPrimary());
+                transaction.setCategoryDetailed(plaidTransaction.getPersonalFinanceCategory().getDetailed());
+            }
             transaction.setPending(Boolean.TRUE.equals(plaidTransaction.getPending()));
             transactionRepository.save(transaction);
         }
@@ -155,7 +159,8 @@ public class TransactionService {
                         t.getMerchantName(),
                         t.getAmount(),
                         t.getIsoCurrencyCode(),
-                        t.getCategory(),
+                        t.getCategoryPrimary(),
+                        t.getCategoryDetailed(),
                         Boolean.TRUE.equals(t.getPending())))
                 .toList();
     }
