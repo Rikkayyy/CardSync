@@ -65,7 +65,7 @@ public class PlaidService {
         return body.getLinkToken();
     }
 
-    public void exchangePublicToken(String email, String publicToken) {
+    public void exchangePublicToken(String email, String publicToken, String institutionId, String institutionName) {
         User user = resolveUser(email);
 
         ItemPublicTokenExchangeRequest request = new ItemPublicTokenExchangeRequest()
@@ -86,6 +86,8 @@ public class PlaidService {
         PlaidItem item = new PlaidItem();
         item.setUser(user);
         item.setPlaidItemId(body.getItemId());
+        item.setInstitutionId(institutionId);
+        item.setInstitutionName(institutionName);
         item.setAccessTokenEncrypted(encryptionService.encrypt(body.getAccessToken()));
         plaidItemRepository.save(item);
     }

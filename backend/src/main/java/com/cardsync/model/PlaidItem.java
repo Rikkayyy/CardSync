@@ -34,6 +34,12 @@ public class PlaidItem {
     @Column(name = "plaid_item_id", nullable = false, unique = true)
     private String plaidItemId;
 
+    @Column(name = "institution_id")
+    private String institutionId;
+
+    @Column(name = "institution_name")
+    private String institutionName;
+
     @Column(name = "access_token_encrypted", nullable = false)
     private String accessTokenEncrypted;
 

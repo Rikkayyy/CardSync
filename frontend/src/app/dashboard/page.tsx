@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
+import { AccountsList } from "@/components/AccountsList";
 import { PlaidLinkButton } from "@/components/PlaidLinkButton";
 import { SpendSummary } from "@/components/SpendSummary";
 import { TransactionList } from "@/components/TransactionList";
@@ -79,7 +80,9 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      <PlaidLinkButton />
+      <PlaidLinkButton onLinked={handleManualSync} />
+
+      <AccountsList refreshKey={refreshKey} />
 
       <div className="flex w-full max-w-3xl items-center justify-between">
         <p className="text-xs text-zinc-500">

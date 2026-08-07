@@ -1,5 +1,6 @@
 package com.cardsync.service;
 
+import com.cardsync.dto.AccountResponse;
 import com.cardsync.dto.CategoryTotal;
 import com.cardsync.dto.SpendSummaryResponse;
 import com.cardsync.dto.TransactionResponse;
@@ -111,6 +112,7 @@ public class TransactionService {
             account.setPlaidItem(item);
             account.setPlaidAccountId(plaidAccount.getAccountId());
             account.setName(plaidAccount.getName());
+            account.setOfficialName(plaidAccount.getOfficialName());
             account.setMask(plaidAccount.getMask());
             account.setType(plaidAccount.getType() != null ? plaidAccount.getType().getValue() : null);
             account.setSubtype(plaidAccount.getSubtype() != null ? plaidAccount.getSubtype().getValue() : null);
@@ -163,7 +165,7 @@ public class TransactionService {
         return transactionRepository.findAllByUserOrderByDateDesc(user)
                 .stream()
                 .map(t -> new TransactionResponse(
-                        t.getAccount().getName(),
+                        displayAccountName(t.getAccount()),
                         t.getDate(),
                         t.getName(),
                         t.getMerchantName(),
@@ -172,6 +174,19 @@ public class TransactionService {
                         t.getCategoryPrimary(),
                         t.getCategoryDetailed(),
                         Boolean.TRUE.equals(t.getPending())))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AccountResponse> listAccounts(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        return accountRepository.findAllByPlaidItem_User(user)
+                .stream()
+                .map(a -> new AccountResponse(
+                        a.getPlaidItem().getInstitutionName(),
+                        a.getOfficialName() != null ? a.getOfficialName() : a.getName(),
+                        a.getMask()))
                 .toList();
     }
 
@@ -219,6 +234,13 @@ public class TransactionService {
                 .toList();
 
         return new SpendSummaryResponse(totalToday, totalThisWeek, totalThisMonth, isoCurrencyCode, categoryTotals);
+    }
+
+    private String displayAccountName(Account account) {
+        String name = account.getOfficialName() != null ? account.getOfficialName() : account.getName();
+        String institution = account.getPlaidItem().getInstitutionName();
+        String withInstitution = institution != null ? institution + " " + name : name;
+        return account.getMask() != null ? withInstitution + " ••" + account.getMask() : withInstitution;
     }
 
     private boolean isSpend(Transaction t) {

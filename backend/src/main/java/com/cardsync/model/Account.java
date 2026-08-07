@@ -37,6 +37,9 @@ public class Account {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "official_name")
+    private String officialName;
+
     private String mask;
 
     private String type;

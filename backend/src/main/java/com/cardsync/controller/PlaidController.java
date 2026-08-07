@@ -30,7 +30,8 @@ public class PlaidController {
     @PostMapping("/exchange-token")
     public ResponseEntity<Void> exchangeToken(
             Authentication authentication, @Valid @RequestBody ExchangeTokenRequest request) {
-        plaidService.exchangePublicToken(authentication.getName(), request.publicToken());
+        plaidService.exchangePublicToken(
+                authentication.getName(), request.publicToken(), request.institutionId(), request.institutionName());
         return ResponseEntity.noContent().build();
     }
 }

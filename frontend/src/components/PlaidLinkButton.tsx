@@ -5,12 +5,12 @@ import { usePlaidLink, type PlaidLinkOnSuccess } from "react-plaid-link";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 
-export function PlaidLinkButton() {
+export function PlaidLinkButton({ onLinked }: { onLinked: () => void }) {
   const { token } = useAuth();
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isExchanging, setIsExchanging] = useState(false);
-  const [connected, setConnected] = useState(false);
+  const [fetchAttempt, setFetchAttempt] = useState(0);
 
   useEffect(() => {
     if (!token) return;
@@ -21,35 +21,38 @@ export function PlaidLinkButton() {
     )
       .then((res) => setLinkToken(res.linkToken))
       .catch(() => setError("Couldn't start the bank connection. Try again."));
-  }, [token]);
+  }, [token, fetchAttempt]);
 
   const onSuccess: PlaidLinkOnSuccess = useCallback(
-    (publicToken) => {
+    (publicToken, metadata) => {
       setIsExchanging(true);
       setError(null);
       apiFetch(
         "/api/plaid/exchange-token",
         {
           method: "POST",
-          body: JSON.stringify({ publicToken }),
+          body: JSON.stringify({
+            publicToken,
+            institutionId: metadata.institution?.institution_id ?? null,
+            institutionName: metadata.institution?.name ?? null,
+          }),
         },
         token
       )
-        .then(() => setConnected(true))
+        .then(() => {
+          onLinked();
+          setFetchAttempt((n) => n + 1);
+        })
         .catch(() => setError("Couldn't finish connecting your bank. Try again."))
         .finally(() => setIsExchanging(false));
     },
-    [token]
+    [token, onLinked]
   );
 
   const { open, ready } = usePlaidLink({
     token: linkToken,
     onSuccess,
   });
-
-  if (connected) {
-    return <p className="text-sm text-zinc-600 dark:text-zinc-400">Bank account connected.</p>;
-  }
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -61,7 +64,18 @@ export function PlaidLinkButton() {
       >
         {isExchanging ? "Connecting..." : "Connect a bank account"}
       </button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && (
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setFetchAttempt((n) => n + 1);
+          }}
+          className="text-sm text-red-600 underline"
+        >
+          {error} Retry?
+        </button>
+      )}
     </div>
   );
 }
