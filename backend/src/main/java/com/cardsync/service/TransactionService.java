@@ -254,9 +254,13 @@ public class TransactionService {
 
         LocalDate today = LocalDate.now();
         LocalDate since = switch (granularity) {
-            case DAY -> today.minusDays(29);
+            case DAY -> today.minusDays(today.getDayOfWeek().getValue() % 7);
             case WEEK -> today.minusWeeks(11).with(DayOfWeek.MONDAY);
             case MONTH -> today.minusMonths(11).withDayOfMonth(1);
+        };
+        LocalDate until = switch (granularity) {
+            case DAY -> since.plusDays(6);
+            case WEEK, MONTH -> today;
         };
 
         List<Transaction> transactions = transactionRepository.findAllByUserSince(user, since);
@@ -274,7 +278,7 @@ public class TransactionService {
 
         List<TrendPoint> points = new ArrayList<>();
         LocalDate cursor = since;
-        while (!cursor.isAfter(today)) {
+        while (!cursor.isAfter(until)) {
             points.add(new TrendPoint(cursor, totalsByPeriod.getOrDefault(cursor, 0.0)));
             cursor = switch (granularity) {
                 case DAY -> cursor.plusDays(1);

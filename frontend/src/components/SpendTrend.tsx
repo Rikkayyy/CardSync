@@ -31,6 +31,11 @@ function formatPeriodLabel(dateStr: string, granularity: Granularity): string {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+function weekdayInitial(dateStr: string): string {
+  const date = new Date(`${dateStr}T00:00:00`);
+  return date.toLocaleDateString(undefined, { weekday: "narrow" });
+}
+
 export function SpendTrend({ refreshKey }: { refreshKey: number }) {
   const { token } = useAuth();
   const [granularity, setGranularity] = useState<Granularity>("DAY");
@@ -118,7 +123,17 @@ export function SpendTrend({ refreshKey }: { refreshKey: number }) {
         </div>
       )}
 
-      {points.length > 0 && (
+      {points.length > 0 && granularity === "DAY" && (
+        <div className="flex gap-[2px] text-xs text-[#898781]">
+          {points.map((p) => (
+            <span key={p.periodStart} className="flex-1 max-w-[24px] text-center">
+              {weekdayInitial(p.periodStart)}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {points.length > 0 && granularity !== "DAY" && (
         <div className="flex justify-between text-xs text-[#898781]">
           <span>{formatPeriodLabel(points[0].periodStart, granularity)}</span>
           <span>{formatPeriodLabel(points[points.length - 1].periodStart, granularity)}</span>
