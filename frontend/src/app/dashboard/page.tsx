@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { AccountsList } from "@/components/AccountsList";
+import { CategoryGroups } from "@/components/CategoryGroups";
 import { PlaidLinkButton } from "@/components/PlaidLinkButton";
 import { SpendSummary } from "@/components/SpendSummary";
 import { SpendTrend } from "@/components/SpendTrend";
 import { TransactionList } from "@/components/TransactionList";
 
 export default function DashboardPage() {
-  const { token, email, logout } = useAuth();
+  const { token, email, logout, ready } = useAuth();
   const router = useRouter();
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -19,10 +20,10 @@ export default function DashboardPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    if (!token) {
+    if (ready && !token) {
       router.push("/login");
     }
-  }, [token, router]);
+  }, [ready, token, router]);
 
   useEffect(() => {
     if (!token) return;
@@ -106,6 +107,7 @@ export default function DashboardPage() {
 
       <SpendSummary refreshKey={refreshKey} />
       <SpendTrend refreshKey={refreshKey} />
+      <CategoryGroups onChange={() => setRefreshKey((key) => key + 1)} />
       <TransactionList refreshKey={refreshKey} />
     </div>
   );

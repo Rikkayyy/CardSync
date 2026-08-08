@@ -19,9 +19,14 @@ type AuthResponse = {
 type AuthState = {
   token: string | null;
   email: string | null;
+  // False only for the transient pre-hydration render (matches getServerSnapshot).
+  // Consumers must wait for this before treating a null token as "logged out" —
+  // otherwise a fresh page load briefly reports token=null and redirects to
+  // /login before the real localStorage value has been read.
+  ready: boolean;
 };
 
-const SERVER_SNAPSHOT: AuthState = { token: null, email: null };
+const SERVER_SNAPSHOT: AuthState = { token: null, email: null, ready: false };
 
 let state: AuthState = SERVER_SNAPSHOT;
 let initialized = false;
@@ -32,6 +37,7 @@ function getSnapshot(): AuthState {
     state = {
       token: localStorage.getItem(TOKEN_STORAGE_KEY),
       email: localStorage.getItem(EMAIL_STORAGE_KEY),
+      ready: true,
     };
     initialized = true;
   }
@@ -47,8 +53,8 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-function setAuthState(next: AuthState) {
-  state = next;
+function setAuthState(next: Omit<AuthState, "ready">) {
+  state = { ...next, ready: true };
   if (next.token && next.email) {
     localStorage.setItem(TOKEN_STORAGE_KEY, next.token);
     localStorage.setItem(EMAIL_STORAGE_KEY, next.email);

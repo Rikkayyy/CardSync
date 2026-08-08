@@ -50,6 +50,8 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final EncryptionService encryptionService;
     private final TransferDetectionService transferDetectionService;
+    private final CategoryReconciliationService categoryReconciliationService;
+    private final CategoryGroupService categoryGroupService;
 
     public TransactionService(
             PlaidApi plaidApi,
@@ -58,7 +60,9 @@ public class TransactionService {
             AccountRepository accountRepository,
             TransactionRepository transactionRepository,
             EncryptionService encryptionService,
-            TransferDetectionService transferDetectionService) {
+            TransferDetectionService transferDetectionService,
+            CategoryReconciliationService categoryReconciliationService,
+            CategoryGroupService categoryGroupService) {
         this.plaidApi = plaidApi;
         this.userRepository = userRepository;
         this.plaidItemRepository = plaidItemRepository;
@@ -66,6 +70,8 @@ public class TransactionService {
         this.transactionRepository = transactionRepository;
         this.encryptionService = encryptionService;
         this.transferDetectionService = transferDetectionService;
+        this.categoryReconciliationService = categoryReconciliationService;
+        this.categoryGroupService = categoryGroupService;
     }
 
     @Transactional
@@ -78,6 +84,7 @@ public class TransactionService {
         }
 
         transferDetectionService.detectTransfers(user);
+        categoryReconciliationService.reconcileCategories(user);
     }
 
     private void syncItem(PlaidItem item) {
@@ -158,6 +165,11 @@ public class TransactionService {
                 transaction.setCategoryDetailed(plaidTransaction.getPersonalFinanceCategory().getDetailed());
             }
             transaction.setPending(Boolean.TRUE.equals(plaidTransaction.getPending()));
+            transaction.setNormalizedMerchant(
+                    MerchantNormalizer.normalize(transaction.getMerchantName(), transaction.getName()));
+            if (transaction.getEffectiveCategoryPrimary() == null) {
+                transaction.setEffectiveCategoryPrimary(transaction.getCategoryPrimary());
+            }
             transactionRepository.save(transaction);
         }
     }
@@ -212,6 +224,7 @@ public class TransactionService {
         LocalDate earliest = startOfWeek.isBefore(startOfMonth) ? startOfWeek : startOfMonth;
 
         List<Transaction> transactions = transactionRepository.findAllByUserSince(user, earliest);
+        CategoryLabelResolver labelResolver = categoryGroupService.resolverFor(user);
 
         double totalToday = 0;
         double totalThisWeek = 0;
@@ -228,7 +241,7 @@ public class TransactionService {
             double amount = t.getAmount();
             if (!t.getDate().isBefore(startOfMonth)) {
                 totalThisMonth += amount;
-                String category = t.getCategoryPrimary() != null ? t.getCategoryPrimary() : "OTHER";
+                String category = labelResolver.resolve(t.getNormalizedMerchant(), t.getEffectiveCategoryPrimary());
                 byCategory.merge(category, amount, Double::sum);
             }
             if (!t.getDate().isBefore(startOfWeek)) {
@@ -308,6 +321,7 @@ public class TransactionService {
     private boolean isSpend(Transaction t) {
         if (t.getAmount() == null || t.getAmount() <= 0) return false;
         if (Boolean.TRUE.equals(t.getIsInternalTransfer())) return false;
-        return t.getCategoryPrimary() == null || !NON_SPEND_CATEGORIES.contains(t.getCategoryPrimary());
+        String category = t.getEffectiveCategoryPrimary() != null ? t.getEffectiveCategoryPrimary() : t.getCategoryPrimary();
+        return category == null || !NON_SPEND_CATEGORIES.contains(category);
     }
 }

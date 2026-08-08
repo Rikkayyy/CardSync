@@ -59,6 +59,13 @@ public class Transaction {
     @Column(name = "category_detailed")
     private String categoryDetailed;
 
+    @Column(name = "normalized_merchant")
+    private String normalizedMerchant;
+
+    /** Reconciled category across all of a user's transactions for the same normalized merchant; falls back to categoryPrimary when there's no cross-merchant disagreement to resolve. */
+    @Column(name = "effective_category_primary")
+    private String effectiveCategoryPrimary;
+
     @Column(nullable = false)
     private Boolean pending;
 
