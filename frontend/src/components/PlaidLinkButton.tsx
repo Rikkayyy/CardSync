@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePlaidLink, type PlaidLinkOnSuccess } from "react-plaid-link";
+import { Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 
@@ -55,13 +56,14 @@ export function PlaidLinkButton({ onLinked }: { onLinked: () => void }) {
   });
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-start gap-2">
       <button
         type="button"
         onClick={() => open()}
         disabled={!ready || isExchanging}
-        className="rounded-full bg-foreground px-5 py-2 text-background transition-colors hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+        className="flex cursor-pointer items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
       >
+        <Plus className="h-4 w-4" aria-hidden="true" />
         {isExchanging ? "Connecting..." : "Connect a bank account"}
       </button>
       {error && (
@@ -71,7 +73,7 @@ export function PlaidLinkButton({ onLinked }: { onLinked: () => void }) {
             setError(null);
             setFetchAttempt((n) => n + 1);
           }}
-          className="text-sm text-red-600 underline"
+          className="cursor-pointer text-sm text-negative underline"
         >
           {error} Retry?
         </button>

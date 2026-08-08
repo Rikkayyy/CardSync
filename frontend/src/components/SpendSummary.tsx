@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CalendarDays, CalendarRange, Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 
@@ -18,6 +19,7 @@ type SpendSummaryResponse = {
 };
 
 function formatCategory(value: string): string {
+  if (!/^[A-Z_]+$/.test(value)) return value;
   return value
     .toLowerCase()
     .split("_")
@@ -50,7 +52,7 @@ export function SpendSummary({ refreshKey }: { refreshKey: number }) {
   }, [token, refreshKey]);
 
   if (error) {
-    return <p className="text-sm text-red-600">{error}</p>;
+    return <p className="text-sm text-negative">{error}</p>;
   }
 
   if (!summary) {
@@ -58,48 +60,56 @@ export function SpendSummary({ refreshKey }: { refreshKey: number }) {
   }
 
   const currency = summary.isoCurrencyCode;
+  const maxCategoryTotal = Math.max(1, ...summary.byCategoryThisMonth.map((c) => c.total));
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]">
-          <p className="text-xs text-zinc-600 dark:text-zinc-400">Today</p>
-          <p className="text-xl font-semibold text-black dark:text-zinc-50">
+        <div className="flex flex-col gap-1.5 rounded-xl border border-border bg-surface p-4 shadow-sm">
+          <span className="flex items-center gap-1.5 text-xs font-medium text-muted">
+            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+            Today
+          </span>
+          <p className="text-xl font-semibold text-foreground">
             {formatAmount(summary.totalToday, currency)}
           </p>
         </div>
-        <div className="rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]">
-          <p className="text-xs text-zinc-600 dark:text-zinc-400">
-            This Week
-          </p>
-          <p className="text-xl font-semibold text-black dark:text-zinc-50">
+        <div className="flex flex-col gap-1.5 rounded-xl border border-border bg-surface p-4 shadow-sm">
+          <span className="flex items-center gap-1.5 text-xs font-medium text-muted">
+            <CalendarRange className="h-3.5 w-3.5" aria-hidden="true" />
+            This week
+          </span>
+          <p className="text-xl font-semibold text-foreground">
             {formatAmount(summary.totalThisWeek, currency)}
           </p>
         </div>
-        <div className="rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]">
-          <p className="text-xs text-zinc-600 dark:text-zinc-400">
-            This Month
-          </p>
-          <p className="text-xl font-semibold text-black dark:text-zinc-50">
+        <div className="flex flex-col gap-1.5 rounded-xl border border-border bg-surface p-4 shadow-sm">
+          <span className="flex items-center gap-1.5 text-xs font-medium text-muted">
+            <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
+            This month
+          </span>
+          <p className="text-xl font-semibold text-foreground">
             {formatAmount(summary.totalThisMonth, currency)}
           </p>
         </div>
       </div>
 
       {summary.byCategoryThisMonth.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            By category this month
-          </h3>
-          <ul className="flex flex-col gap-1 text-sm">
+        <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-5 shadow-sm">
+          <h3 className="text-sm font-medium text-muted">By category this month</h3>
+          <ul className="flex flex-col gap-2.5">
             {summary.byCategoryThisMonth.map((c) => (
-              <li key={c.category} className="flex justify-between">
-                <span className="text-black dark:text-zinc-50">
-                  {formatCategory(c.category)}
-                </span>
-                <span className="text-zinc-600 dark:text-zinc-400">
-                  {formatAmount(c.total, currency)}
-                </span>
+              <li key={c.category} className="flex flex-col gap-1">
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium text-foreground">{formatCategory(c.category)}</span>
+                  <span className="text-muted">{formatAmount(c.total, currency)}</span>
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
+                  <div
+                    className="h-full rounded-full bg-accent"
+                    style={{ width: `${Math.max(2, (c.total / maxCategoryTotal) * 100)}%` }}
+                  />
+                </div>
               </li>
             ))}
           </ul>

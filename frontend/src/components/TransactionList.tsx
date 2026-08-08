@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ArrowLeftRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 
@@ -26,6 +27,11 @@ function formatCategory(value: string | null): string {
     .join(" ");
 }
 
+function formatAmount(amount: number, currency: string | null): string {
+  const sign = amount < 0 ? "+" : "-";
+  return `${sign}${Math.abs(amount).toFixed(2)} ${currency ?? ""}`.trim();
+}
+
 export function TransactionList({ refreshKey }: { refreshKey: number }) {
   const { token } = useAuth();
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
@@ -47,63 +53,59 @@ export function TransactionList({ refreshKey }: { refreshKey: number }) {
   }, [token, refreshKey]);
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-4">
-      <h2 className="text-lg font-semibold text-black dark:text-zinc-50">
-        Transactions
-      </h2>
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-sm">
+      <h2 className="text-base font-semibold text-foreground">Transactions</h2>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-negative">{error}</p>}
 
       {transactions.length === 0 ? (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          No transactions yet. Connect a bank account and sync.
-        </p>
+        <p className="text-sm text-muted">No transactions yet. Connect a bank account and sync.</p>
       ) : (
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-black/[.08] text-zinc-600 dark:border-white/[.145] dark:text-zinc-400">
-              <th className="py-2 font-medium">Date</th>
-              <th className="py-2 font-medium">Name</th>
-              <th className="py-2 font-medium">Account</th>
-              <th className="py-2 font-medium">Category</th>
-              <th className="py-2 text-right font-medium">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((t, i) => (
-              <tr
-                key={i}
-                className="border-b border-black/[.04] dark:border-white/[.08]"
-              >
-                <td className="py-2 text-zinc-600 dark:text-zinc-400">
-                  {t.date}
-                </td>
-                <td className="py-2 text-black dark:text-zinc-50">
-                  {t.merchantName ?? t.name}
-                  {t.pending && (
-                    <span className="ml-2 text-xs text-zinc-500">
-                      pending
-                    </span>
-                  )}
-                  {t.isInternalTransfer && (
-                    <span className="ml-2 rounded-full bg-zinc-200 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                      transfer
-                    </span>
-                  )}
-                </td>
-                <td className="py-2 text-zinc-600 dark:text-zinc-400">
-                  {t.accountName}
-                </td>
-                <td className="py-2 text-zinc-600 dark:text-zinc-400">
-                  {formatCategory(t.categoryDetailed ?? t.categoryPrimary)}
-                </td>
-                <td className="py-2 text-right text-black dark:text-zinc-50">
-                  {t.amount.toFixed(2)} {t.isoCurrencyCode ?? ""}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-left text-sm">
+            <thead>
+              <tr className="border-b border-border text-muted">
+                <th className="py-2 pr-3 font-medium">Date</th>
+                <th className="py-2 pr-3 font-medium">Name</th>
+                <th className="py-2 pr-3 font-medium">Account</th>
+                <th className="py-2 pr-3 font-medium">Category</th>
+                <th className="py-2 text-right font-medium">Amount</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {transactions.map((t, i) => (
+                <tr key={i} className="border-b border-border last:border-b-0">
+                  <td className="py-2.5 pr-3 whitespace-nowrap text-muted">{t.date}</td>
+                  <td className="py-2.5 pr-3 text-foreground">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span>{t.merchantName ?? t.name}</span>
+                      {t.pending && <span className="text-xs text-muted">pending</span>}
+                      {t.isInternalTransfer && (
+                        <span className="flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+                          <ArrowLeftRight className="h-3 w-3" aria-hidden="true" />
+                          transfer
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="max-w-[160px] truncate py-2.5 pr-3 text-muted" title={t.accountName}>
+                    {t.accountName}
+                  </td>
+                  <td className="max-w-[160px] py-2.5 pr-3 text-muted">
+                    {formatCategory(t.categoryDetailed ?? t.categoryPrimary)}
+                  </td>
+                  <td
+                    className={`py-2.5 text-right font-medium tabular-nums ${
+                      t.amount < 0 ? "text-positive" : "text-foreground"
+                    }`}
+                  >
+                    {formatAmount(t.amount, t.isoCurrencyCode)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

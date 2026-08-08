@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Tag, Trash2, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 
@@ -22,6 +23,7 @@ type MerchantSummaryResponse = {
 
 function formatCategory(value: string | null): string {
   if (!value) return "—";
+  if (!/^[A-Z_]+$/.test(value)) return value;
   return value
     .toLowerCase()
     .split("_")
@@ -106,25 +108,24 @@ export function CategoryGroups({ onChange }: { onChange?: () => void }) {
   }
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-4">
-      <h2 className="text-lg font-semibold text-black dark:text-zinc-50">
-        Category groups
-      </h2>
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-sm">
+      <h2 className="text-base font-semibold text-foreground">Category groups</h2>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-negative">{error}</p>}
 
       <div className="flex gap-2">
         <input
           type="text"
           value={newGroupName}
           onChange={(e) => setNewGroupName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && createGroup()}
           placeholder="New group name (e.g. Work lunches)"
-          className="flex-1 rounded-md border border-black/[.08] bg-transparent px-3 py-1.5 text-sm dark:border-white/[.145]"
+          className="flex-1 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/30"
         />
         <button
           type="button"
           onClick={createGroup}
-          className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background"
+          className="cursor-pointer rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-foreground transition-colors hover:opacity-90"
         >
           Create
         </button>
@@ -133,14 +134,18 @@ export function CategoryGroups({ onChange }: { onChange?: () => void }) {
       {groups.length > 0 && (
         <div className="flex flex-col gap-3">
           {groups.map((group) => (
-            <div key={group.id} className="rounded-md border border-black/[.08] p-3 dark:border-white/[.145]">
+            <div key={group.id} className="rounded-lg border border-border bg-background p-3">
               <div className="flex items-center justify-between">
-                <p className="font-medium text-black dark:text-zinc-50">{group.name}</p>
+                <p className="flex items-center gap-1.5 font-medium text-foreground">
+                  <Tag className="h-3.5 w-3.5 text-muted" aria-hidden="true" />
+                  {group.name}
+                </p>
                 <button
                   type="button"
                   onClick={() => deleteGroup(group.id)}
-                  className="text-xs text-red-600 underline"
+                  className="flex cursor-pointer items-center gap-1 text-xs font-medium text-negative hover:underline"
                 >
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                   Delete group
                 </button>
               </div>
@@ -150,21 +155,21 @@ export function CategoryGroups({ onChange }: { onChange?: () => void }) {
                   .map((m) => (
                     <span
                       key={m.normalizedMerchant}
-                      className="flex items-center gap-1 rounded-full bg-black/[.06] px-2.5 py-1 text-xs text-zinc-700 dark:bg-white/[.1] dark:text-zinc-300"
+                      className="flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent"
                     >
                       {m.displayName}
                       <button
                         type="button"
                         onClick={() => m.memberId && unassignMerchant(m.memberId)}
-                        className="text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-100"
+                        className="cursor-pointer text-accent/70 hover:text-accent"
                         aria-label={`Remove ${m.displayName} from ${group.name}`}
                       >
-                        ×
+                        <X className="h-3 w-3" aria-hidden="true" />
                       </button>
                     </span>
                   ))}
                 {merchants.filter((m) => m.groupId === group.id).length === 0 && (
-                  <span className="text-xs text-zinc-500">No merchants assigned yet.</span>
+                  <span className="text-xs text-muted">No merchants assigned yet.</span>
                 )}
               </div>
             </div>
@@ -174,47 +179,49 @@ export function CategoryGroups({ onChange }: { onChange?: () => void }) {
 
       {merchants.length > 0 && (
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Merchants</p>
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-black/[.08] text-zinc-600 dark:border-white/[.145] dark:text-zinc-400">
-                <th className="py-2 font-medium">Merchant</th>
-                <th className="py-2 font-medium">Default category</th>
-                <th className="py-2 font-medium">Group</th>
-              </tr>
-            </thead>
-            <tbody>
-              {merchants.map((m) => (
-                <tr key={m.normalizedMerchant} className="border-b border-black/[.04] dark:border-white/[.08]">
-                  <td className="py-2 text-black dark:text-zinc-50">{m.displayName}</td>
-                  <td className="py-2 text-zinc-600 dark:text-zinc-400">
-                    {formatCategory(m.effectiveCategoryPrimary)}
-                  </td>
-                  <td className="py-2">
-                    <select
-                      value={m.groupId ?? ""}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (value) {
-                          assignMerchant(m.normalizedMerchant, value);
-                        } else if (m.memberId) {
-                          unassignMerchant(m.memberId);
-                        }
-                      }}
-                      className="rounded-md border border-black/[.08] bg-transparent px-2 py-1 text-sm dark:border-white/[.145]"
-                    >
-                      <option value="">— none —</option>
-                      {groups.map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
+          <p className="text-sm font-medium text-muted">Merchants</p>
+          <div className="max-h-80 overflow-y-auto rounded-lg border border-border">
+            <table className="w-full text-left text-sm">
+              <thead className="sticky top-0 bg-background">
+                <tr className="border-b border-border text-muted">
+                  <th className="px-3 py-2 font-medium">Merchant</th>
+                  <th className="px-3 py-2 font-medium">Default category</th>
+                  <th className="px-3 py-2 font-medium">Group</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {merchants.map((m) => (
+                  <tr key={m.normalizedMerchant} className="border-b border-border last:border-b-0">
+                    <td className="max-w-xs truncate px-3 py-2 text-foreground" title={m.displayName}>
+                      {m.displayName}
+                    </td>
+                    <td className="px-3 py-2 text-muted">{formatCategory(m.effectiveCategoryPrimary)}</td>
+                    <td className="px-3 py-2">
+                      <select
+                        value={m.groupId ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value) {
+                            assignMerchant(m.normalizedMerchant, value);
+                          } else if (m.memberId) {
+                            unassignMerchant(m.memberId);
+                          }
+                        }}
+                        className="cursor-pointer rounded-md border border-border bg-surface px-2 py-1 text-sm text-foreground outline-none focus:border-accent"
+                      >
+                        <option value="">— none —</option>
+                        {groups.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            {g.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

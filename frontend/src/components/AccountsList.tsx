@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CreditCard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 
@@ -32,17 +33,20 @@ export function AccountsList({ refreshKey }: { refreshKey: number }) {
   if (accounts.length === 0) return null;
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-400">
-      <p className="font-medium text-black dark:text-zinc-50">Connected accounts</p>
-      <ul className="flex flex-col gap-0.5">
-        {accounts.map((a, i) => (
-          <li key={i}>
+    <ul className="flex flex-col gap-1.5">
+      {accounts.map((a, i) => (
+        <li
+          key={i}
+          className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+        >
+          <CreditCard className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+          <span>
             {a.institutionName ? `${a.institutionName} — ` : ""}
             {a.accountName}
             {a.mask ? ` ••${a.mask}` : ""}
-          </li>
-        ))}
-      </ul>
-    </div>
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }

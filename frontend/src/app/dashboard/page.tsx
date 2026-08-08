@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Landmark, RefreshCw, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { AccountsList } from "@/components/AccountsList";
@@ -68,47 +69,67 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col items-center gap-6 bg-zinc-50 px-16 py-32 dark:bg-black">
-      <div className="flex w-full max-w-3xl items-center justify-between">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Signed in as {email}
-        </p>
-        <button
-          type="button"
-          onClick={logout}
-          className="text-sm font-medium underline"
-        >
-          Log out
-        </button>
-      </div>
+    <div className="flex flex-1 flex-col bg-background">
+      <header className="sticky top-0 z-10 border-b border-border bg-surface/90 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <Landmark className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+            </span>
+            <span className="text-sm font-semibold text-foreground">CardSync</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <p className="hidden text-sm text-muted sm:block">{email}</p>
+            <button
+              type="button"
+              onClick={logout}
+              className="flex cursor-pointer items-center gap-1.5 text-sm font-medium text-muted transition-colors hover:text-foreground"
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              Log out
+            </button>
+          </div>
+        </div>
+      </header>
 
-      <PlaidLinkButton onLinked={handleManualSync} />
+      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
+        <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-base font-semibold text-foreground">Linked accounts</h1>
+            <div className="flex items-center gap-3">
+              <p className="text-xs text-muted">
+                {lastSyncedAt
+                  ? `Last synced ${lastSyncedAt.toLocaleTimeString()}`
+                  : isSyncing
+                    ? "Syncing…"
+                    : "Not synced yet"}
+              </p>
+              <button
+                type="button"
+                onClick={handleManualSync}
+                disabled={isSyncing}
+                className="flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-background disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`}
+                  aria-hidden="true"
+                />
+                {isSyncing ? "Syncing" : "Sync"}
+              </button>
+            </div>
+          </div>
 
-      <AccountsList refreshKey={refreshKey} />
+          <AccountsList refreshKey={refreshKey} />
+          <PlaidLinkButton onLinked={handleManualSync} />
 
-      <div className="flex w-full max-w-3xl items-center justify-between">
-        <p className="text-xs text-zinc-500">
-          {lastSyncedAt
-            ? `Last synced ${lastSyncedAt.toLocaleTimeString()}`
-            : isSyncing
-              ? "Syncing..."
-              : "Not synced yet"}
-        </p>
-        <button
-          type="button"
-          onClick={handleManualSync}
-          disabled={isSyncing}
-          className="rounded-full border border-black/[.08] px-4 py-1.5 text-sm font-medium transition-colors hover:bg-black/[.04] disabled:opacity-50 dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
-        >
-          {isSyncing ? "Syncing..." : "Sync"}
-        </button>
-      </div>
-      {syncError && <p className="text-sm text-red-600">{syncError}</p>}
+          {syncError && <p className="text-sm text-negative">{syncError}</p>}
+        </div>
 
-      <SpendSummary refreshKey={refreshKey} />
-      <SpendTrend refreshKey={refreshKey} />
-      <CategoryGroups onChange={() => setRefreshKey((key) => key + 1)} />
-      <TransactionList refreshKey={refreshKey} />
+        <SpendSummary refreshKey={refreshKey} />
+        <SpendTrend refreshKey={refreshKey} />
+        <CategoryGroups onChange={() => setRefreshKey((key) => key + 1)} />
+        <TransactionList refreshKey={refreshKey} />
+      </main>
     </div>
   );
 }

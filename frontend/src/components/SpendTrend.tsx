@@ -63,21 +63,19 @@ export function SpendTrend({ refreshKey }: { refreshKey: number }) {
   const currency = data?.isoCurrencyCode ?? "";
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-3">
+    <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-5 shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-black dark:text-zinc-50">
-          Spend trend
-        </h2>
-        <div className="flex gap-1 rounded-full border border-black/[.08] p-1 dark:border-white/[.145]">
+        <h2 className="text-base font-semibold text-foreground">Spend trend</h2>
+        <div className="flex gap-1 rounded-full border border-border p-1">
           {GRANULARITY_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               type="button"
               onClick={() => setGranularity(opt.value)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              className={`cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 granularity === opt.value
-                  ? "bg-foreground text-background"
-                  : "text-zinc-600 hover:bg-black/[.04] dark:text-zinc-400 dark:hover:bg-white/[.08]"
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted hover:bg-background"
               }`}
             >
               {opt.label}
@@ -86,7 +84,7 @@ export function SpendTrend({ refreshKey }: { refreshKey: number }) {
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-negative">{error}</p>}
 
       {points.length > 0 && (
         <div className="relative flex h-40 items-end gap-[2px] border-b border-[#c3c2b7] dark:border-[#383835]">
