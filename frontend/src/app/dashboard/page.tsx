@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import { AccountsList } from "@/components/AccountsList";
 import { PlaidLinkButton } from "@/components/PlaidLinkButton";
 import { SpendSummary } from "@/components/SpendSummary";
+import { SpendTrend } from "@/components/SpendTrend";
 import { TransactionList } from "@/components/TransactionList";
 
 export default function DashboardPage() {
@@ -104,6 +105,7 @@ export default function DashboardPage() {
       {syncError && <p className="text-sm text-red-600">{syncError}</p>}
 
       <SpendSummary refreshKey={refreshKey} />
+      <SpendTrend refreshKey={refreshKey} />
       <TransactionList refreshKey={refreshKey} />
     </div>
   );

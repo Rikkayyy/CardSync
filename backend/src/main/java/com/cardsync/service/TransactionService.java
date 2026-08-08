@@ -3,10 +3,13 @@ package com.cardsync.service;
 import com.cardsync.dto.AccountResponse;
 import com.cardsync.dto.CategoryTotal;
 import com.cardsync.dto.SpendSummaryResponse;
+import com.cardsync.dto.SpendTrendResponse;
 import com.cardsync.dto.TransactionResponse;
+import com.cardsync.dto.TrendPoint;
 import com.cardsync.model.Account;
 import com.cardsync.model.PlaidItem;
 import com.cardsync.model.Transaction;
+import com.cardsync.model.TrendGranularity;
 import com.cardsync.model.User;
 import com.cardsync.repository.AccountRepository;
 import com.cardsync.repository.PlaidItemRepository;
@@ -27,10 +30,12 @@ import retrofit2.Response;
 import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 @Service
 public class TransactionService {
@@ -240,6 +245,53 @@ public class TransactionService {
                 .toList();
 
         return new SpendSummaryResponse(totalToday, totalThisWeek, totalThisMonth, isoCurrencyCode, categoryTotals);
+    }
+
+    @Transactional(readOnly = true)
+    public SpendTrendResponse getSpendTrend(String email, TrendGranularity granularity) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+
+        LocalDate today = LocalDate.now();
+        LocalDate since = switch (granularity) {
+            case DAY -> today.minusDays(29);
+            case WEEK -> today.minusWeeks(11).with(DayOfWeek.MONDAY);
+            case MONTH -> today.minusMonths(11).withDayOfMonth(1);
+        };
+
+        List<Transaction> transactions = transactionRepository.findAllByUserSince(user, since);
+
+        Map<LocalDate, Double> totalsByPeriod = new TreeMap<>();
+        String isoCurrencyCode = null;
+        for (Transaction t : transactions) {
+            if (!isSpend(t)) continue;
+            if (isoCurrencyCode == null) {
+                isoCurrencyCode = t.getIsoCurrencyCode();
+            }
+            LocalDate period = periodStart(t.getDate(), granularity);
+            totalsByPeriod.merge(period, t.getAmount(), Double::sum);
+        }
+
+        List<TrendPoint> points = new ArrayList<>();
+        LocalDate cursor = since;
+        while (!cursor.isAfter(today)) {
+            points.add(new TrendPoint(cursor, totalsByPeriod.getOrDefault(cursor, 0.0)));
+            cursor = switch (granularity) {
+                case DAY -> cursor.plusDays(1);
+                case WEEK -> cursor.plusWeeks(1);
+                case MONTH -> cursor.plusMonths(1);
+            };
+        }
+
+        return new SpendTrendResponse(granularity.name(), isoCurrencyCode, points);
+    }
+
+    private LocalDate periodStart(LocalDate date, TrendGranularity granularity) {
+        return switch (granularity) {
+            case DAY -> date;
+            case WEEK -> date.with(DayOfWeek.MONDAY);
+            case MONTH -> date.withDayOfMonth(1);
+        };
     }
 
     private String displayAccountName(Account account) {
