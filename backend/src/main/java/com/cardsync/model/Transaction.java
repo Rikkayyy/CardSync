@@ -62,6 +62,12 @@ public class Transaction {
     @Column(nullable = false)
     private Boolean pending;
 
+    @Column(name = "is_internal_transfer", nullable = false)
+    private Boolean isInternalTransfer = false;
+
+    @Column(name = "transfer_pair_id")
+    private UUID transferPairId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

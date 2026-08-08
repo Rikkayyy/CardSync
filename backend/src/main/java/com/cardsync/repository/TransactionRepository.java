@@ -30,4 +30,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             and t.date >= :since
             """)
     List<Transaction> findAllByUserSince(@Param("user") User user, @Param("since") LocalDate since);
+
+    @Query("""
+            select t from Transaction t
+            where t.account.plaidItem.user = :user
+            and t.date >= :since
+            and t.transferPairId is null
+            and t.pending = false
+            """)
+    List<Transaction> findUnmatchedByUserSince(@Param("user") User user, @Param("since") LocalDate since);
 }

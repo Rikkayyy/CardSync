@@ -14,6 +14,7 @@ type TransactionResponse = {
   categoryPrimary: string | null;
   categoryDetailed: string | null;
   pending: boolean;
+  isInternalTransfer: boolean;
 };
 
 function formatCategory(value: string | null): string {
@@ -82,6 +83,11 @@ export function TransactionList({ refreshKey }: { refreshKey: number }) {
                   {t.pending && (
                     <span className="ml-2 text-xs text-zinc-500">
                       pending
+                    </span>
+                  )}
+                  {t.isInternalTransfer && (
+                    <span className="ml-2 rounded-full bg-zinc-200 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                      transfer
                     </span>
                   )}
                 </td>

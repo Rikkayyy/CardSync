@@ -44,6 +44,7 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final EncryptionService encryptionService;
+    private final TransferDetectionService transferDetectionService;
 
     public TransactionService(
             PlaidApi plaidApi,
@@ -51,13 +52,15 @@ public class TransactionService {
             PlaidItemRepository plaidItemRepository,
             AccountRepository accountRepository,
             TransactionRepository transactionRepository,
-            EncryptionService encryptionService) {
+            EncryptionService encryptionService,
+            TransferDetectionService transferDetectionService) {
         this.plaidApi = plaidApi;
         this.userRepository = userRepository;
         this.plaidItemRepository = plaidItemRepository;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.encryptionService = encryptionService;
+        this.transferDetectionService = transferDetectionService;
     }
 
     @Transactional
@@ -68,6 +71,8 @@ public class TransactionService {
         for (PlaidItem item : plaidItemRepository.findAllByUser(user)) {
             syncItem(item);
         }
+
+        transferDetectionService.detectTransfers(user);
     }
 
     private void syncItem(PlaidItem item) {
@@ -173,7 +178,8 @@ public class TransactionService {
                         t.getIsoCurrencyCode(),
                         t.getCategoryPrimary(),
                         t.getCategoryDetailed(),
-                        Boolean.TRUE.equals(t.getPending())))
+                        Boolean.TRUE.equals(t.getPending()),
+                        Boolean.TRUE.equals(t.getIsInternalTransfer())))
                 .toList();
     }
 
@@ -245,6 +251,7 @@ public class TransactionService {
 
     private boolean isSpend(Transaction t) {
         if (t.getAmount() == null || t.getAmount() <= 0) return false;
+        if (Boolean.TRUE.equals(t.getIsInternalTransfer())) return false;
         return t.getCategoryPrimary() == null || !NON_SPEND_CATEGORIES.contains(t.getCategoryPrimary());
     }
 }

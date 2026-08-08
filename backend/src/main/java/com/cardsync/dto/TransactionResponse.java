@@ -11,5 +11,6 @@ public record TransactionResponse(
         String isoCurrencyCode,
         String categoryPrimary,
         String categoryDetailed,
-        boolean pending) {
+        boolean pending,
+        boolean isInternalTransfer) {
 }
