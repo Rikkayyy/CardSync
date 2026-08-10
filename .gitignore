@@ -23,6 +23,7 @@ todo.md
 securityaudit.md
 ARCHITECTURE_DECISIONS.md
 DEPLOYMENT_PLAN*.md
+NOTES.md
 
 # OS / editor
 .DS_Store
