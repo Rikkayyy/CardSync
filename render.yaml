@@ -61,7 +61,10 @@ services:
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
-        value: https://cardsync-backend.onrender.com
+        # Actual assigned URL -- "cardsync-backend" alone was already taken,
+        # Render suffixed it. Confirm this still matches the real backend URL
+        # in the dashboard if the service is ever recreated.
+        value: https://cardsync-backend-0h2h.onrender.com
     routes:
       # Client-side routing (react-router) — unknown paths fall through to
       # index.html instead of 404ing, so e.g. a direct load of /dashboard works.
