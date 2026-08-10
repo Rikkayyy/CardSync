@@ -1,6 +1,6 @@
 # CardSync
 
-A unified view of spending across every card and bank account you have — built to solve a specific, personal problem: juggling 3-4 separate banking apps to answer "how much have I actually spent this month?"
+A unified view of spending across every card and bank account you have — built to solve a specific, personal problem: juggling 3-4 separate banking apps to answer "how much have I actually spent today? This week? This month?"
 
 CardSync connects to your accounts via [Plaid](https://plaid.com), pulls transactions from every linked institution, and reconciles them into one consistent picture. The core value isn't the dashboard — it's the reconciliation layer underneath it: detecting transfers between your own accounts so they don't get double-counted as spend, and normalizing categorization across institutions that don't agree with themselves on what a merchant even *is*.
 
