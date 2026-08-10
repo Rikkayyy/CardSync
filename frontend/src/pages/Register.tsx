@@ -1,15 +1,12 @@
-"use client";
-
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useNavigate, Link } from "react-router-dom";
 import { Landmark, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError } from "@/lib/api";
 
-export default function LoginPage() {
-  const { login } = useAuth();
-  const router = useRouter();
+export function RegisterPage() {
+  const { register } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,12 +17,12 @@ export default function LoginPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await login(email, password);
-      router.push("/dashboard");
+      await register(email, password);
+      navigate("/dashboard");
     } catch (err) {
       setError(
-        err instanceof ApiError
-          ? "Invalid email or password."
+        err instanceof ApiError && err.status === 409
+          ? "An account with that email already exists."
           : "Something went wrong. Try again."
       );
     } finally {
@@ -43,7 +40,7 @@ export default function LoginPage() {
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent/10 text-accent">
             <Landmark className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
           </span>
-          <h1 className="text-xl font-semibold text-foreground">Log in to CardSync</h1>
+          <h1 className="text-xl font-semibold text-foreground">Create an account</h1>
         </div>
 
         <label className="flex flex-col gap-1.5 text-sm font-medium text-foreground">
@@ -63,7 +60,8 @@ export default function LoginPage() {
           <input
             type="password"
             required
-            autoComplete="current-password"
+            minLength={8}
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/30"
@@ -82,13 +80,13 @@ export default function LoginPage() {
           disabled={isSubmitting}
           className="cursor-pointer rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isSubmitting ? "Logging in..." : "Log in"}
+          {isSubmitting ? "Creating account..." : "Create account"}
         </button>
 
         <p className="text-center text-sm text-muted">
-          No account?{" "}
-          <Link href="/register" className="font-medium text-accent hover:underline">
-            Register
+          Already have an account?{" "}
+          <Link to="/login" className="font-medium text-accent hover:underline">
+            Log in
           </Link>
         </p>
       </form>

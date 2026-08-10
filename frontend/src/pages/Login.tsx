@@ -1,15 +1,12 @@
-"use client";
-
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useNavigate, Link } from "react-router-dom";
 import { Landmark, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError } from "@/lib/api";
 
-export default function RegisterPage() {
-  const { register } = useAuth();
-  const router = useRouter();
+export function LoginPage() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,12 +17,12 @@ export default function RegisterPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await register(email, password);
-      router.push("/dashboard");
+      await login(email, password);
+      navigate("/dashboard");
     } catch (err) {
       setError(
-        err instanceof ApiError && err.status === 409
-          ? "An account with that email already exists."
+        err instanceof ApiError
+          ? "Invalid email or password."
           : "Something went wrong. Try again."
       );
     } finally {
@@ -43,7 +40,7 @@ export default function RegisterPage() {
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent/10 text-accent">
             <Landmark className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
           </span>
-          <h1 className="text-xl font-semibold text-foreground">Create an account</h1>
+          <h1 className="text-xl font-semibold text-foreground">Log in to CardSync</h1>
         </div>
 
         <label className="flex flex-col gap-1.5 text-sm font-medium text-foreground">
@@ -63,8 +60,7 @@ export default function RegisterPage() {
           <input
             type="password"
             required
-            minLength={8}
-            autoComplete="new-password"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/30"
@@ -83,13 +79,13 @@ export default function RegisterPage() {
           disabled={isSubmitting}
           className="cursor-pointer rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isSubmitting ? "Creating account..." : "Create account"}
+          {isSubmitting ? "Logging in..." : "Log in"}
         </button>
 
         <p className="text-center text-sm text-muted">
-          Already have an account?{" "}
-          <Link href="/login" className="font-medium text-accent hover:underline">
-            Log in
+          No account?{" "}
+          <Link to="/register" className="font-medium text-accent hover:underline">
+            Register
           </Link>
         </p>
       </form>

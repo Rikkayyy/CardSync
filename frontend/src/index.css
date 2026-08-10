@@ -10,6 +10,8 @@
   --accent-foreground: #ffffff;
   --positive: #16a34a;
   --negative: #dc2626;
+  --font-plex-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-plex-mono: "IBM Plex Mono", monospace;
 }
 
 @theme inline {
@@ -40,8 +42,15 @@
   }
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }

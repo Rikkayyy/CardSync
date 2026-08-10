@@ -1,7 +1,5 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { Landmark, RefreshCw, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
@@ -12,9 +10,9 @@ import { SpendSummary } from "@/components/SpendSummary";
 import { SpendTrend } from "@/components/SpendTrend";
 import { TransactionList } from "@/components/TransactionList";
 
-export default function DashboardPage() {
+export function DashboardPage() {
   const { token, email, logout, ready } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
@@ -22,9 +20,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (ready && !token) {
-      router.push("/login");
+      navigate("/login");
     }
-  }, [ready, token, router]);
+  }, [ready, token, navigate]);
 
   useEffect(() => {
     if (!token) return;

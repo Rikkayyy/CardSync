@@ -16,11 +16,11 @@ Portfolio piece aimed at fintech/banking software roles. The goal is to demonstr
 ---
 
 ## Tech Stack
-- **Frontend:** Next.js, TypeScript, Tailwind CSS — deployed on Vercel, uses SSR/server components for rendering but holds no business logic; all data/API calls go to the Java backend. Route Handlers not used for app logic (Spring Boot is the sole API).
+- **Frontend:** Vite, React, TypeScript, Tailwind CSS — client-rendered SPA (react-router-dom for routing), holds no business logic; all data/API calls go to the Java backend. (Originally scaffolded with Next.js for its SSR/server-component option; migrated to Vite once the app was fully built and every page turned out to be a client component with no SSR actually in use — see `ARCHITECTURE_DECISIONS.md`.)
 - **Backend:** Java, Spring Boot (REST API, layered architecture — controller/service/repository)
 - **Database:** Postgres, accessed via Spring Data JPA + Hibernate
 - **Bank data:** Plaid API (Sandbox → Development tier), via Plaid's Java SDK
-- **Hosting:** Frontend on Vercel; backend on AWS (ECS or Elastic Beanstalk)
+- **Hosting:** Frontend on Vercel (Vite's static `dist/` build deploys there the same as the old Next.js build did); backend on AWS (ECS or Elastic Beanstalk)
 - **Auth:** Custom Spring Security + JWT (self-implemented — password hashing, token issuance/refresh, secured endpoints), separate from Plaid's bank-auth flow
 
 ---
