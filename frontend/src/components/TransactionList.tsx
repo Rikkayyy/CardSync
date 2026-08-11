@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 type TransactionResponse = {
   accountName: string;
   date: string;
+  authorizedDate: string | null;
   name: string;
   merchantName: string | null;
   amount: number;
@@ -75,7 +74,14 @@ export function TransactionList({ refreshKey }: { refreshKey: number }) {
             <tbody>
               {transactions.map((t, i) => (
                 <tr key={i} className="border-b border-border last:border-b-0">
-                  <td className="py-2.5 pr-3 whitespace-nowrap text-muted">{t.date}</td>
+                  <td className="py-2.5 pr-3 whitespace-nowrap text-muted">
+                    <div>{t.date}</div>
+                    {t.authorizedDate && t.authorizedDate !== t.date && (
+                      <div className="text-xs text-muted/70" title="Authorized date">
+                        auth {t.authorizedDate}
+                      </div>
+                    )}
+                  </td>
                   <td className="py-2.5 pr-3 text-foreground">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span>{t.merchantName ?? t.name}</span>

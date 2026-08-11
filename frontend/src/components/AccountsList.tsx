@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { CreditCard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";

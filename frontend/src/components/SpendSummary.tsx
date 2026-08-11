@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { CalendarDays, CalendarRange, Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";

@@ -5,6 +5,7 @@ import java.time.LocalDate;
 public record TransactionResponse(
         String accountName,
         LocalDate date,
+        LocalDate authorizedDate,
         String name,
         String merchantName,
         Double amount,

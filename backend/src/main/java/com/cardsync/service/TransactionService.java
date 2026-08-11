@@ -156,6 +156,7 @@ public class TransactionService {
             transaction.setAmount(plaidTransaction.getAmount());
             transaction.setIsoCurrencyCode(plaidTransaction.getIsoCurrencyCode());
             transaction.setDate(plaidTransaction.getDate());
+            transaction.setAuthorizedDate(plaidTransaction.getAuthorizedDate());
             transaction.setName(plaidTransaction.getName());
             transaction.setMerchantName(plaidTransaction.getMerchantName());
             transaction.setCategory(
@@ -189,6 +190,7 @@ public class TransactionService {
                 .map(t -> new TransactionResponse(
                         displayAccountName(t.getAccount()),
                         t.getDate(),
+                        t.getAuthorizedDate(),
                         t.getName(),
                         t.getMerchantName(),
                         t.getAmount(),

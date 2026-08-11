@@ -44,6 +44,10 @@ public class Transaction {
     @Column(nullable = false)
     private LocalDate date;
 
+    /** When the transaction was authorized -- can predate (or occasionally postdate) the posted `date`, and is null for some pending transactions Plaid hasn't assigned one to yet. */
+    @Column(name = "authorized_date")
+    private LocalDate authorizedDate;
+
     @Column(nullable = false)
     private String name;
 

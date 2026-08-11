@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { Tag, Trash2, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
