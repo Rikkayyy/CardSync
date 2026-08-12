@@ -21,6 +21,17 @@ import java.util.UUID;
  * with equal magnitude, opposite sign, on different accounts, within a few days of
  * each other. This catches internal transfers even when Plaid's own category
  * taxonomy doesn't tag them as TRANSFER_IN/TRANSFER_OUT.
+ *
+ * Candidates include pending transactions: a transfer's two legs often post at
+ * different times (e.g. a credit card payment shows pending on the card while
+ * already posted on the checking account it came from), so requiring both sides to
+ * be posted before matching left genuine transfers unmatched -- and therefore
+ * miscounted as spend -- until the slower leg cleared. A matched pending
+ * transaction's transferPairId can go stale if Plaid later replaces it with a new
+ * transaction ID on posting, but that's harmless: transferPairId is only read to
+ * exclude already-matched rows from re-matching, never displayed or joined on, and
+ * isInternalTransfer (the flag spend calculations actually check) stays correct on
+ * the surviving side regardless.
  */
 @Service
 public class TransferDetectionService {
