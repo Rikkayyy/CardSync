@@ -40,8 +40,15 @@ import java.util.TreeMap;
 @Service
 public class TransactionService {
 
-    /** Plaid personal_finance_category primaries that represent moving money, not spending it. */
-    private static final Set<String> NON_SPEND_CATEGORIES = Set.of("LOAN_PAYMENTS", "TRANSFER_IN", "TRANSFER_OUT");
+    /**
+     * Plaid personal_finance_category primaries that represent moving money, not spending it.
+     * LOAN_PAYMENTS is deliberately NOT included: it covers both internal transfers (e.g. paying
+     * off a credit card from a linked checking account) and genuine external payments (student
+     * loans, mortgages) that are real spend. isSpend() already excludes confirmed internal
+     * transfers via is_internal_transfer, so a LOAN_PAYMENTS transaction not flagged as one is
+     * correctly counted as spend rather than being swept out by category alone.
+     */
+    private static final Set<String> NON_SPEND_CATEGORIES = Set.of("TRANSFER_IN", "TRANSFER_OUT");
 
     private final PlaidApi plaidApi;
     private final UserRepository userRepository;
