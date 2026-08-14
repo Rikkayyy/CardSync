@@ -61,7 +61,7 @@ export function SpendSummary({ refreshKey }: { refreshKey: number }) {
   const maxCategoryTotal = Math.max(1, ...summary.byCategoryThisMonth.map((c) => c.total));
 
   return (
-    <div className="flex flex-col gap-4">
+    <div id="spend-summary" className="flex flex-col gap-4">
       <div className="grid grid-cols-3 gap-4">
         <div className="flex flex-col gap-1.5 rounded-xl border border-border bg-surface p-4 shadow-sm">
           <span className="flex items-center gap-1.5 text-xs font-medium text-muted">

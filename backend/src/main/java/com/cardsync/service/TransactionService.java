@@ -17,6 +17,8 @@ import com.cardsync.repository.TransactionRepository;
 import com.cardsync.repository.UserRepository;
 import com.cardsync.security.EncryptionService;
 import com.plaid.client.model.AccountBase;
+import com.plaid.client.model.AccountsBalanceGetRequest;
+import com.plaid.client.model.AccountsGetResponse;
 import com.plaid.client.model.RemovedTransaction;
 import com.plaid.client.model.TransactionsSyncRequest;
 import com.plaid.client.model.TransactionsSyncResponse;
@@ -127,6 +129,32 @@ public class TransactionService {
 
         item.setTransactionsCursor(cursor);
         plaidItemRepository.save(item);
+
+        refreshAccountBalances(item, accessToken);
+    }
+
+    /**
+     * transactionsSync's embedded account balances are a cached snapshot that Plaid only
+     * refreshes on its own background schedule, so relying on it left Account.currentBalance
+     * stale even right after a sync. accounts/balance/get forces a live pull from the
+     * institution, so it's called once per item after each sync to keep balances current.
+     */
+    private void refreshAccountBalances(PlaidItem item, String accessToken) {
+        AccountsBalanceGetRequest request = new AccountsBalanceGetRequest().accessToken(accessToken);
+
+        Response<AccountsGetResponse> response;
+        try {
+            response = plaidApi.accountsBalanceGet(request).execute();
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Failed to reach Plaid", e);
+        }
+
+        AccountsGetResponse body = response.body();
+        if (!response.isSuccessful() || body == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Plaid balance fetch failed");
+        }
+
+        upsertAccounts(body.getAccounts(), item);
     }
 
     private void upsertAccounts(List<AccountBase> plaidAccounts, PlaidItem item) {
