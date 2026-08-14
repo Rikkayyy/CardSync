@@ -1,4 +1,4 @@
 package com.cardsync.dto;
 
-public record AccountResponse(String institutionName, String accountName, String mask) {
+public record AccountResponse(String institutionName, String accountName, String mask, Double currentBalance, String type, String subtype) {
 }

@@ -5,6 +5,8 @@ import com.cardsync.model.User;
 import com.cardsync.repository.PlaidItemRepository;
 import com.cardsync.repository.UserRepository;
 import com.cardsync.security.EncryptionService;
+import com.plaid.client.model.AccountsBalanceGetRequest;
+import com.plaid.client.model.AccountsGetResponse;
 import com.plaid.client.model.CountryCode;
 import com.plaid.client.model.ItemPublicTokenExchangeRequest;
 import com.plaid.client.model.ItemPublicTokenExchangeResponse;
@@ -19,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -90,6 +93,38 @@ public class PlaidService {
         item.setInstitutionName(institutionName);
         item.setAccessTokenEncrypted(encryptionService.encrypt(body.getAccessToken()));
         plaidItemRepository.save(item);
+    }
+
+    /**
+     * Calls Plaid's real-time /accounts/balance/get for every one of the user's linked
+     * institutions and returns the SDK's response objects as-is (not mapped into a CardSync
+     * DTO), so the raw shape of what Plaid actually sends back is inspectable -- unlike
+     * Account.currentBalance, which is only ever populated as a side effect of syncing
+     * transactions and never exposed through the API today.
+     */
+    public List<AccountsGetResponse> getRawBalances(String email) {
+        User user = resolveUser(email);
+        List<AccountsGetResponse> results = new ArrayList<>();
+
+        for (PlaidItem item : plaidItemRepository.findAllByUser(user)) {
+            String accessToken = encryptionService.decrypt(item.getAccessTokenEncrypted());
+            AccountsBalanceGetRequest request = new AccountsBalanceGetRequest().accessToken(accessToken);
+
+            Response<AccountsGetResponse> response;
+            try {
+                response = plaidApi.accountsBalanceGet(request).execute();
+            } catch (IOException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Failed to reach Plaid", e);
+            }
+
+            AccountsGetResponse body = response.body();
+            if (!response.isSuccessful() || body == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Plaid balance fetch failed");
+            }
+            results.add(body);
+        }
+
+        return results;
     }
 
     private User resolveUser(String email) {
