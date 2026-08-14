@@ -90,43 +90,44 @@ export function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
-        <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-sm">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:flex-row lg:items-start">
+        <aside className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-sm lg:w-72 lg:shrink-0 lg:sticky lg:top-20">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h1 className="text-base font-semibold text-foreground">Linked accounts</h1>
-            <div className="flex items-center gap-3">
-              <p className="text-xs text-muted">
-                {lastSyncedAt
-                  ? `Last synced ${lastSyncedAt.toLocaleTimeString()}`
-                  : isSyncing
-                    ? "Syncing…"
-                    : "Not synced yet"}
-              </p>
-              <button
-                type="button"
-                onClick={handleManualSync}
-                disabled={isSyncing}
-                className="flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-background disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`}
-                  aria-hidden="true"
-                />
-                {isSyncing ? "Syncing" : "Sync"}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleManualSync}
+              disabled={isSyncing}
+              className="flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-background disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />
+              {isSyncing ? "Syncing" : "Sync"}
+            </button>
           </div>
+
+          <p className="text-xs text-muted">
+            {lastSyncedAt
+              ? `Last synced ${lastSyncedAt.toLocaleTimeString()}`
+              : isSyncing
+                ? "Syncing…"
+                : "Not synced yet"}
+          </p>
 
           <AccountsList refreshKey={refreshKey} />
           <PlaidLinkButton onLinked={handleManualSync} />
 
           {syncError && <p className="text-sm text-negative">{syncError}</p>}
-        </div>
+        </aside>
 
-        <SpendSummary refreshKey={refreshKey} />
-        <SpendTrend refreshKey={refreshKey} />
-        <CategoryGroups onChange={() => setRefreshKey((key) => key + 1)} />
-        <TransactionList refreshKey={refreshKey} />
+        <div className="flex flex-1 flex-col gap-6">
+          <SpendSummary refreshKey={refreshKey} />
+          <SpendTrend refreshKey={refreshKey} />
+          <CategoryGroups onChange={() => setRefreshKey((key) => key + 1)} />
+          <TransactionList refreshKey={refreshKey} />
+        </div>
       </main>
     </div>
   );

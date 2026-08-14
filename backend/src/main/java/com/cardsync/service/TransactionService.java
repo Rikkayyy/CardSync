@@ -218,7 +218,10 @@ public class TransactionService {
                 .map(a -> new AccountResponse(
                         a.getPlaidItem().getInstitutionName(),
                         a.getOfficialName() != null ? a.getOfficialName() : a.getName(),
-                        a.getMask()))
+                        a.getMask(),
+                        a.getCurrentBalance(),
+                        a.getType(),
+                        a.getSubtype()))
                 .toList();
     }
 
