@@ -10,9 +10,10 @@
 
 app = "cardsync-backend"
 
-# Keep this in the same region as the Neon project — a cross-region hop on every
-# query is the one latency cost that's easy to avoid and annoying to discover later.
-primary_region = "iad"
+# Neon project lives in AWS us-east-2 (Ohio). Fly has no Ohio region; `ord`
+# (Chicago) is the nearest, with `iad` (Ashburn) a near-tie. Keeping these close
+# avoids a cross-region hop on every query — easy to avoid, annoying to discover later.
+primary_region = "ord"
 
 [build]
   dockerfile = "Dockerfile"
@@ -26,7 +27,7 @@ primary_region = "iad"
   # Set after the Vercel project exists — the frontend's real origin.
   # SecurityConfig binds this as a List<String>, so multiple origins can be
   # comma-separated if a custom domain is added alongside the *.vercel.app one.
-  CORS_ALLOWED_ORIGINS = "https://cardsync.vercel.app"
+  CORS_ALLOWED_ORIGINS = "https://card-sync-steel.vercel.app"
 
 [http_service]
   # Matches EXPOSE 8080 / server.port in application.properties. Fly sets $PORT
@@ -39,6 +40,11 @@ primary_region = "iad"
   # no 30-60s JVM cold start on the first request after an idle period.
   auto_stop_machines = "off"
   min_machines_running = 1
+  # NOTE: `fly deploy` provisions a SECOND machine by default for HA, which
+  # silently doubles the bill. Deploy with `fly deploy --ha=false`, or fix it
+  # after the fact with `fly scale count 1`. Fly's own output suggests setting
+  # min_machines_running = 0 instead — do NOT: that restores scale-to-zero and
+  # with it the 30-60s JVM cold start this whole migration exists to remove.
 
   [[http_service.checks]]
     path = "/actuator/health"

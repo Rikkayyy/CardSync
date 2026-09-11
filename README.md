@@ -116,7 +116,8 @@ Split across three providers, each doing the one thing it does well:
 
 ```bash
 # Backend — secrets set once via `fly secrets set`, see fly.toml header
-cd backend && fly deploy
+# --ha=false: without it Fly adds a second machine and doubles the bill
+cd backend && fly deploy --ha=false
 ```
 
 The frontend deploys automatically from Vercel's Git integration; set the project's root directory to `frontend/` and `VITE_API_URL` to the deployed backend's URL.
