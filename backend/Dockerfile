@@ -22,4 +22,7 @@ RUN chown app:app app.jar
 USER app
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# MaxRAMPercentage caps the heap at 75% of the *container* limit, leaving room
+# for thread stacks, metaspace and JIT code. Without it the JVM can size a heap
+# that overruns a small (512MB) instance and get OOM-killed with no stack trace.
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]
