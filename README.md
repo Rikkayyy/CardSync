@@ -99,5 +99,24 @@ Frontend: `http://localhost:3000`. Backend: `http://localhost:8080`.
 
 ## Deployment
 
-- `render.yaml` — a Render Blueprint defining the backend (Docker), frontend (static site), and Postgres as code. See `DEPLOYMENT_PLAN_PAAS.md` for the reasoning behind choosing a PaaS over raw cloud infrastructure for a personal-scale deployment.
-- `backend/Dockerfile` — multi-stage build (JDK to compile, slim JRE to run), works for any Docker-based host, not just Render.
+Split across three providers, each doing the one thing it does well:
+
+| Layer | Host | Config |
+| --- | --- | --- |
+| Frontend | Vercel | `frontend/vercel.json` |
+| Backend | Fly.io | `backend/fly.toml` |
+| Database | Neon (managed Postgres) | connection details set as Fly secrets |
+
+- `backend/fly.toml` — one always-on machine (`min_machines_running = 1`). This is deliberate: scale-to-zero tiers cold-start a JVM container in 30-60s, which was the main pain point of the previous Render deployment.
+- `frontend/vercel.json` — static Vite build plus a catch-all rewrite to `index.html`, so client-side routes like `/dashboard` survive a direct page load.
+- `backend/Dockerfile` — multi-stage build (JDK to compile, slim JRE to run), works for any Docker-based host, not just Fly.
+- Previously deployed via a Render Blueprint (`render.yaml`, removed). Moved off Render because its free Postgres tier expires after ~90 days and its free web tier sleeps after 15 minutes idle. See `DEPLOYMENT_PLAN_PAAS.md` for the original PaaS-vs-cloud reasoning, which still holds.
+
+### Deploy
+
+```bash
+# Backend — secrets set once via `fly secrets set`, see fly.toml header
+cd backend && fly deploy
+```
+
+The frontend deploys automatically from Vercel's Git integration; set the project's root directory to `frontend/` and `VITE_API_URL` to the deployed backend's URL.

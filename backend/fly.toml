@@ -1,0 +1,54 @@
+# Fly.io app config — https://fly.io/docs/reference/configuration/
+#
+# Deploy from this directory: `fly deploy` (fly.toml sits next to the Dockerfile
+# so the build context is `backend/`, matching the Dockerfile's relative COPYs).
+#
+# Secrets are NOT stored here — set them once with `fly secrets set KEY=value`:
+#   JWT_SECRET, PLAID_CLIENT_ID, PLAID_SECRET, TOKEN_ENCRYPTION_KEY,
+#   DB_HOST, DB_PORT, POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
+# (the DB_* / POSTGRES_* values come from the Neon dashboard).
+
+app = "cardsync-backend"
+
+# Keep this in the same region as the Neon project — a cross-region hop on every
+# query is the one latency cost that's easy to avoid and annoying to discover later.
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PLAID_ENV = "production"
+  JWT_EXPIRATION_MS = "86400000"
+  # Neon terminates TLS; the local docker-compose Postgres does not. See
+  # application.properties for why this is a variable rather than hardcoded.
+  DB_SSLMODE = "require"
+  # Set after the Vercel project exists — the frontend's real origin.
+  # SecurityConfig binds this as a List<String>, so multiple origins can be
+  # comma-separated if a custom domain is added alongside the *.vercel.app one.
+  CORS_ALLOWED_ORIGINS = "https://cardsync.vercel.app"
+
+[http_service]
+  # Matches EXPOSE 8080 / server.port in application.properties. Fly sets $PORT
+  # too, but pinning it here keeps the health check and the app in agreement.
+  internal_port = 8080
+  force_https = true
+  auto_start_machines = true
+
+  # THE point of moving off Render's free tier: never scale to zero, so there's
+  # no 30-60s JVM cold start on the first request after an idle period.
+  auto_stop_machines = "off"
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    path = "/actuator/health"
+    method = "GET"
+    interval = "30s"
+    timeout = "5s"
+    # Spring Boot on a shared-cpu-1x takes a while to come up; without a grace
+    # period Fly would fail the check and restart the machine mid-startup.
+    grace_period = "45s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
